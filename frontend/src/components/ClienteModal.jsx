@@ -31,6 +31,11 @@ export default function ClienteModal({ cliente, onClose, onSave, loading }) {
     const e = {};
     if (!form.razon_social.trim()) e.razon_social = 'Requerido';
     if (!form.cuit.trim()) e.cuit = 'Requerido';
+    // ⚠️ GAP — US-1591272
+    // Escenario: "El CUIT debe tener formato válido (11 dígitos numéricos)"
+    // Problema: El CA dice '11 dígitos numéricos' pero la regex valida el formato con guiones (XX-XXXXXXXX-X).
+    //           Un CUIT como '30712345678' (sin guiones) es rechazado aunque sea numéricamente válido.
+    // Sugerencia: Aclarar con el PO el formato de entrada. Si se acepta sin guiones: /^\d{11}$/
     else if (!/^\d{2}-\d{7,8}-\d$/.test(form.cuit)) e.cuit = 'Formato inválido: XX-XXXXXXXX-X';
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Email inválido';
     return e;
@@ -87,6 +92,12 @@ export default function ClienteModal({ cliente, onClose, onSave, loading }) {
               { v: 'RETAIL', l: 'Retail' }, { v: 'PYME', l: 'PYME' },
               { v: 'CORPORATIVO', l: 'Corporativo' }, { v: 'PREMIUM', l: 'Premium' }
             ]} />
+            {/* ⚠️ GAP — US-1591272
+                Escenario: "El estado inicial es siempre ACTIVO" (CA4)
+                Problema: Este selector de estado se muestra tanto en el alta como en la edición.
+                          En el alta, el operador puede crear un cliente con estado INACTIVO o BLOQUEADO,
+                          lo cual viola el requisito de que el estado inicial sea SIEMPRE ACTIVO.
+                Sugerencia: Ocultar este campo cuando !isEdit (alta nueva) y forzar ACTIVO en el backend. */}
             <Sel id="estado" label="Estado" req opts={[
               { v: 'ACTIVO', l: 'Activo' }, { v: 'INACTIVO', l: 'Inactivo' }, { v: 'BLOQUEADO', l: 'Bloqueado' }
             ]} />
