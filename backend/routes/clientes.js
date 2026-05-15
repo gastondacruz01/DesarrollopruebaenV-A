@@ -14,6 +14,12 @@ function handleValidation(req, res) {
   return null;
 }
 
+// ⚠️ GAP — US-1591272
+// Escenario: "Toda alta exitosa queda registrada en la tabla de auditoría con el operador y timestamp"
+// Problema: El parámetro 'usuario' siempre se graba como 'sistema' hardcodeado.
+//           No hay mecanismo de autenticación para identificar al operador real que realizó el alta.
+// Sugerencia: Implementar autenticación (JWT/sesión) y pasar req.user al contexto;
+//             luego invocar registrarAuditoria(db, id, accion, campos, req.user?.nombre || 'sistema')
 function registrarAuditoria(db, clienteId, accion, camposMod = null, usuario = 'sistema') {
   db.prepare(`
     INSERT INTO auditoria (cliente_id, accion, campos_mod, usuario)
@@ -81,6 +87,14 @@ router.get('/:id', (req, res) => {
 
 // ── Validaciones comunes ──────────────────────────────────────────────────
 
+// ⚠️ GAP — US-1591272
+// Escenario: "El CUIT debe tener formato válido (11 dígitos numéricos)"
+// Problema: El criterio de aceptación especifica '11 dígitos numéricos' (sin separadores, ej: 30712345678),
+//           pero la regex valida el formato con guiones: XX-XXXXXXXX-X.
+//           Un CUIT ingresado como '30712345678' (sin guiones) es rechazado aunque sea numéricamente válido.
+// Sugerencia: Aclarar con el PO el formato de entrada esperado.
+//             Si se acepta sin guiones: .matches(/^\d{11}$/)
+//             Si se mantiene con guiones: actualizar el CA para reflejar el formato real.
 const clienteValidations = [
   body('razon_social').trim().notEmpty().withMessage('Razón social requerida').isLength({ max: 200 }),
   body('cuit').trim().notEmpty().withMessage('CUIT requerido')
@@ -105,6 +119,12 @@ router.post('/', clienteValidations, (req, res) => {
   const db = getDB();
   const {
     razon_social, cuit, tipo_persona, segmento,
+    // ⚠️ GAP — US-1591272
+    // Escenario: "El estado inicial es siempre ACTIVO"
+    // Problema: Se acepta el campo 'estado' del body, lo que permite crear un cliente
+    //           con estado INACTIVO o BLOQUEADO. Debe forzarse a 'ACTIVO' en el alta.
+    // Sugerencia: Eliminar 'estado' del destructuring y usar siempre el literal 'ACTIVO':
+    //             const estado = 'ACTIVO';
     estado = 'ACTIVO', email, telefono, direccion,
     localidad, provincia, codigo_postal, observaciones,
   } = req.body;
