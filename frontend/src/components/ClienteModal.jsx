@@ -92,15 +92,11 @@ export default function ClienteModal({ cliente, onClose, onSave, loading }) {
               { v: 'RETAIL', l: 'Retail' }, { v: 'PYME', l: 'PYME' },
               { v: 'CORPORATIVO', l: 'Corporativo' }, { v: 'PREMIUM', l: 'Premium' }
             ]} />
-            {/* ⚠️ GAP — US-1591272
-                Escenario: "El estado inicial es siempre ACTIVO" (CA4)
-                Problema: Este selector de estado se muestra tanto en el alta como en la edición.
-                          En el alta, el operador puede crear un cliente con estado INACTIVO o BLOQUEADO,
-                          lo cual viola el requisito de que el estado inicial sea SIEMPRE ACTIVO.
-                Sugerencia: Ocultar este campo cuando !isEdit (alta nueva) y forzar ACTIVO en el backend. */}
-            <Sel id="estado" label="Estado" req opts={[
-              { v: 'ACTIVO', l: 'Activo' }, { v: 'INACTIVO', l: 'Inactivo' }, { v: 'BLOQUEADO', l: 'Bloqueado' }
-            ]} />
+            {isEdit && (
+              <Sel id="estado" label="Estado" req opts={[
+                { v: 'ACTIVO', l: 'Activo' }, { v: 'INACTIVO', l: 'Inactivo' }, { v: 'BLOQUEADO', l: 'Bloqueado' }
+              ]} />
+            )}
 
             <span className="section-label">Contacto</span>
             <F id="email" label="Email" type="email" />
