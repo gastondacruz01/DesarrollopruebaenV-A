@@ -119,15 +119,10 @@ router.post('/', clienteValidations, (req, res) => {
   const db = getDB();
   const {
     razon_social, cuit, tipo_persona, segmento,
-    // ⚠️ GAP — US-1591272
-    // Escenario: "El estado inicial es siempre ACTIVO"
-    // Problema: Se acepta el campo 'estado' del body, lo que permite crear un cliente
-    //           con estado INACTIVO o BLOQUEADO. Debe forzarse a 'ACTIVO' en el alta.
-    // Sugerencia: Eliminar 'estado' del destructuring y usar siempre el literal 'ACTIVO':
-    //             const estado = 'ACTIVO';
-    estado = 'ACTIVO', email, telefono, direccion,
+    email, telefono, direccion,
     localidad, provincia, codigo_postal, observaciones,
   } = req.body;
+  const estado = 'ACTIVO';
 
   // CUIT duplicado
   const existing = db.prepare('SELECT id FROM clientes WHERE cuit = ?').get(cuit);
